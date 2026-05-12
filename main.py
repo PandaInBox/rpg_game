@@ -1,7 +1,6 @@
 import random
 from world.location import world
-#from monster.wolf import wolf
-
+from monster.being import monsters
 
 base = {
     'base_speed': 8,
@@ -9,7 +8,7 @@ base = {
     'base_armor': 10,
     'base_dice_string_hp':'1d8'
 }
-playeer_1 = {
+playeer = {
         'name': 'heroy',
         'hp': None,
         'max-hp': None,
@@ -46,13 +45,8 @@ playeer_1 = {
             }
         } 
 }
-# попадание: игрок бросает кубик 1д20
-# к результату брока кубика 1д20 + модификатор силы/ловкости + бонус мастерства
-# сравниваем результат броска с защитой противника и если она больше или равно - попадание
-# дальше бросаем кость урона в зависимости от оружия, например, 1д8 + модификатор силы/ловкости
-# если есть сопротивления или уязвимости, то делем или умножаем конечный результат на 2
 
-# расчета силы и ловкости
+# расчет модификатора характеристик
 def dex_mod(params):
     scope = (params - 10) // 2
     return scope
@@ -85,10 +79,7 @@ def initiative(dexterity_scope):
 
 # функция расчета здоровья(базовая кость, существо):
 #       max_hp = базовая кость + существо[мод телосложения]
-#       
-#       
-#       
-#           
+#        
          
 #def playeer_punch(враг, игрок, сила_мод)
 #    if попадание игрока больше или равно ас_врага:
@@ -105,44 +96,6 @@ def initiative(dexterity_scope):
 #       вернуть сообщение, что игрок промахнулся
 #
 
-playeer = {
-            'name': 'heroy',
-            'hp': 20,
-            'max-hp': 20,
-            'location': 'лес',
-            'damage': 8,
-            'base_stat':{
-                'strength ': 5,     
-                'agility': 7,
-                'luck': None,
-                'speed': 5,
-                'shield': 2
-            },
-            'effects':[],
-            'inventory':{},
-            'equipment':{
-                'armor':{
-                    'name': 'бам',
-                    'shield': 5
-                }
-            }
-        } 
-enemies = {
-            'волк': {
-                'name':'Волк',
-                'hp': 6,
-                'max_hp': 5,
-                'location': ['лес', 'пещера'],
-                'base_stat':{
-                    'damage': 4,
-                    'agility': 7,
-                    'luck': None,
-                    'speed': 7,
-                    'shield': 1
-                },
-                'effects':[]
-            }
-        }
 
 def playeer_punch(enemy, playeer_base, enemy_base):
     if playeer_base['luck'] > random.random():
@@ -200,7 +153,6 @@ def choice_playeer(enemy, choice, playeer_base, enemy_base):
 
 def game_core():
     playeer_base = playeer['base_stat']   
-
     while playeer['hp'] > 0:
         loc = world[playeer['location']]
         print(f'{loc["descriptions"]}')
@@ -217,7 +169,7 @@ def game_core():
         playeer['location'] = loc['exit'][command]
         if random.random() < 0.5 and 'enemies' in loc:
             name_enemies = random.choice(loc['enemies'])
-            enemy = enemies[name_enemies].copy()
+            enemy = monsters[name_enemies].copy()
             enemy_base = enemy['base_stat']
             enemy_base['luck'] = enemy_base['agility'] / 10
 
@@ -290,17 +242,3 @@ def game_core():
                 print('Вас убили')
         else:
             continue
-
-
-
-# Добавить уровень персонажа
-# добавить новых существ
-# добавить новые предметы, у предмета будет параметр шанса получения %, сам параметр предмет, будет иметь тип обьект значений {'шкура': 1}
-# Добавить условие после цикла или внутри него? если рандомное число меньше шанса получения предмета
-#   игрок идет дальше
-# иначе
-#   выводится сообщение, что игрок получил предмет
-#   переменной из инвентаря игрока добавляется предмет, например, шкура += 1, изначально значение None
-# Добавить виды урона - колющий, дробящий, рубящий
-# Добавить виды состояний - отравление, воспломенение, кровотячение
-
