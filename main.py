@@ -17,7 +17,19 @@ playeer = {
         'proficiency_bonus': 0, #бонус мастерства
         'resistances': [],  #бонус сопротивление
         'vulnerability':[],  #бонус уязвимость
+        'possession':{
+            'armore':'',
+            'weapon':''
+        },
         'base_stat':{
+            'strength ': None,     
+            'dexterity': None,
+            'constitution': None, # телосложение
+            'intelligence': None,
+            'wisdom': None,
+            'charisma': None
+        },
+        'stat_mod':{
             'strength ': None,     
             'dexterity': None,
             'constitution': None,
@@ -28,9 +40,12 @@ playeer = {
         'inventory':{},
         'equipment':{
             'armor':{
-                'name': 'легкий доспех',
+                'name':'padded',
+                'base_armore': 11,
                 'max_dex_mod': 99,
-                'base_armor': 0
+                'stealth_inter': True, #помеха скрытности
+                'cost': 5,
+                'weight': 8
             },
             'shield': {
                 'name': 'без щита',
@@ -38,10 +53,14 @@ playeer = {
                 'defense': 0
             },
             'weapon':{
-                'name':'длинный меч',
-                'type':'меч',
-                'dice_string': '1d8',
-                'mod_power':''
+                'name':'longsword',
+                'category':'military',
+                'type_damage':'slashing',
+                'mod_stat': 'strength',
+                'dice_string':'1d8',
+                'dice_string_two':'1d10',
+                'cost': 15,
+                'weight': 3
             }
         } 
 }
@@ -49,12 +68,12 @@ playeer = {
 # расчет модификатора характеристик
 def dex_mod(params):
     scope = (params - 10) // 2
-    return scope
+    return (scope, f'Твой модификатор {scope}')
 
 # шанс попадания
 def hit_chance(modifier_stat, proficiency_bonus):
     hit = random.randint(1,20) + modifier_stat + proficiency_bonus
-    return hit
+    return (hit, f'Выпало {hit} на попадание')
 
 # класс брони универсальная функция
 def armor_class(dexterity_scope, armor_item, bonus_shield):
@@ -62,7 +81,7 @@ def armor_class(dexterity_scope, armor_item, bonus_shield):
     base_armor = armor_item['base_armor']
     max_dex_mod = armor_item['max_dex_mod']
     ac = base_armor + min(dex_mod, max_dex_mod) + bonus_shield
-    return ac
+    return (ac, f'Твой класс брони: {ac}')
 
 # расчет количества урона
 def damage(dice_string):
@@ -71,30 +90,56 @@ def damage(dice_string):
     count = 0
     for i in range(count_bone):
         count += random.randint(1, max_count_bone)
-    return count
+    return (count, f'На кубах выпало {count} урона')
 
+# расчет инициативы
 def initiative(dexterity_scope):
     init = random.randint(1,20) + dexterity_scope
-    return init
+    return (init, f'Выпало на кубах {init} инициативы')
 
-# функция расчета здоровья(базовая кость, существо):
-#       max_hp = базовая кость + существо[мод телосложения]
-#        
-         
-#def playeer_punch(враг, игрок, сила_мод)
-#    if попадание игрока больше или равно ас_врага:
-#       урон = функция_получения_урона + сила_мод
-#        если враг имеет резист к типу атаки оружия:
-#               урон /=  2
-#               вернуть (урон, сообщение о том сколько нанес игрок врагу)
-#        иначе если враг имеет уязвимость к типу атаки оружия
-#               урон *= 2
-#               вернуть (урон, сообщение о том сколько нанес игрок врагу)
-#        иначе:
-#               вернуть (урон, сообщение о том сколько нанес игрок врагу)
+# расчет максимального хп + увеличение хп, при достижении нового уровня
+def max_hp_chance(base_dice_string_hp, playeer, playeer_mod):
+    max_hp = playeer['max-hp'] + base_dice_string_hp + playeer_mod['constitution']
+    return (max_hp, f'Выпало костей хитов: {max_hp}')
+
+# словарь подготовленных существ требует доработки
+def prepare_attack_profile(attacker, defender):
+    attacker_profile = {
+        'attack_bonus': attacker['stat_mod']['strength'] + attacker['proficiency_bonus'],
+        'dice_string': attacker['weapon']['dice_string'],
+        'damage_mod': attacker['stat_mod']['strength'],
+        'damage_type': attacker['weapon']['type_damage']
+    }
+    defender_profile = {
+        'armor_class': defender['armor_class'],
+        'resistances': defender['resistances'],
+        'vulnerability': defender['vulnerability']
+    }
+
+# удар игрока/монстра требует доработки
+def playeer_punch(monster, monster_resistances, monster_vulnerability, playeer, playeer_mod, playeer_weapon):
+    if hit_chance(playeer_mod['strength'], playeer['proficiency_bonus'])[0] >= monster['armor_class']:
+        hit_damage = damage(playeer_weapon['dice_string'])[0] + playeer_mod['strength']
+        if playeer_weapon['type_damage'] in monster_resistances:
+            monster['hp'] = monster['hp'] - (hit_damage / 2)
+            return (monster['hp'], f'Ты нанес {monster['name']} {hit_damage / 2} урона')
+        elif playeer_weapon['type_damage'] in monster_vulnerability:
+            monster['hp'] = monster['hp'] - (hit_damage * 2)
+            return (monster['hp'], f'Ты нанес {monster['name']} {hit_damage * 2} урона')
+        else:
+            monster['hp'] -= hit_damage
+            return (monster['hp'], f'Ты нанес {monster['name']} {hit_damage} урона')
+    else:
+        return (monster['hp'], 'Ты промахнулся')
+
+
+# функция получения нового оружия игроком(справочник_оружия, будущее_оружие):
+#   если будущее_оружее есть в справочнике_оружия
+#       справочник_оружия = будущее_оружие[название]
+#       обновление_оружие = copy.deepcopy(справочник_оружия)
+#       вернуть обновленное_оружие, сообщение, что игрок экипировал оружение название
 #   иначе
-#       вернуть сообщение, что игрок промахнулся
-#
+#       вернуть none, сообщение, что данное оружие невозможно экипировать
 
 
 def playeer_punch(enemy, playeer_base, enemy_base):
