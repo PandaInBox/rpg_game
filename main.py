@@ -1,6 +1,6 @@
 import random
 from world.location import world
-from monster.being import monsters
+from monster.being import monsters, cr_templates
 
 base = {
     'base_speed': 8,
@@ -11,13 +11,14 @@ base = {
 playeer = {
         'name': 'heroy',
         'hp': None,
-        'max-hp': None,
+        'max_hp': None,
         'level': 1,
         'location': 'лес',
         'proficiency_bonus': 0, #бонус мастерства
         'resistances': [],  #бонус сопротивление
         'vulnerability':[],  #бонус уязвимость
-        'possession':{
+        'armor_class': None,
+        'possession':{      #владение 
             'armore':'',
             'weapon':''
         },
@@ -99,38 +100,107 @@ def initiative(dexterity_scope):
 
 # расчет максимального хп + увеличение хп, при достижении нового уровня
 def max_hp_chance(base_dice_string_hp, playeer, playeer_mod):
-    max_hp = playeer['max-hp'] + base_dice_string_hp + playeer_mod['constitution']
-    return (max_hp, f'Выпало костей хитов: {max_hp}')
-
-# словарь подготовленных существ требует доработки
-def prepare_attack_profile(attacker, defender):
-    attacker_profile = {
-        'attack_bonus': attacker['stat_mod']['strength'] + attacker['proficiency_bonus'],
-        'dice_string': attacker['weapon']['dice_string'],
-        'damage_mod': attacker['stat_mod']['strength'],
-        'damage_type': attacker['weapon']['type_damage']
-    }
-    defender_profile = {
-        'armor_class': defender['armor_class'],
-        'resistances': defender['resistances'],
-        'vulnerability': defender['vulnerability']
-    }
-
-# удар игрока/монстра требует доработки
-def playeer_punch(monster, monster_resistances, monster_vulnerability, playeer, playeer_mod, playeer_weapon):
-    if hit_chance(playeer_mod['strength'], playeer['proficiency_bonus'])[0] >= monster['armor_class']:
-        hit_damage = damage(playeer_weapon['dice_string'])[0] + playeer_mod['strength']
-        if playeer_weapon['type_damage'] in monster_resistances:
-            monster['hp'] = monster['hp'] - (hit_damage / 2)
-            return (monster['hp'], f'Ты нанес {monster['name']} {hit_damage / 2} урона')
-        elif playeer_weapon['type_damage'] in monster_vulnerability:
-            monster['hp'] = monster['hp'] - (hit_damage * 2)
-            return (monster['hp'], f'Ты нанес {monster['name']} {hit_damage * 2} урона')
-        else:
-            monster['hp'] -= hit_damage
-            return (monster['hp'], f'Ты нанес {monster['name']} {hit_damage} урона')
+    count_bone = int(base_dice_string_hp.split('d')[0])
+    max_count_bone = int(base_dice_string_hp.split('d')[1])
+    count = 0
+    for i in range(count_bone):
+        count += random.randint(1, max_count_bone)
+    if playeer['max_hp'] is None:    
+        max_hp = 0 + count + playeer_mod['constitution']
+        return (max_hp, f'Выпало костей хитов: {max_hp}')
     else:
-        return (monster['hp'], 'Ты промахнулся')
+        max_hp = playeer['max_hp'] + count + playeer_mod['constitution']
+        return (max_hp, f'Выпало костей хитов: {max_hp}')
+
+# сбор значений из словаря для атаки
+def prepare_attack_profile(attacker):
+    if 'equipment' in attacker and 'weapon' in attacker['equipment']:
+        attack = attacker['stat_mod']['strength'] + attacker['proficiency_bonus']
+        dice = attacker['weapon']['dice_string']
+        damage_mod = attacker['stat_mod']['strength']
+        damage_type = attacker['weapon']['type_damage']
+        return {
+            'attack_bonus': attack,
+            'dice_string': dice,
+            'damage_mod': damage_mod,
+            'damage_type': damage_type 
+        }
+    elif 'attack' in attacker:
+        attack = attacker['stat_mod']['strength'] + attacker['proficiency_bonus']
+        dice = attacker['attack']['dice_string']
+        damage_mod = attacker['stat_mod']['strength']
+        damage_type = attacker['attack']['type_damage']
+        return {
+            'attack_bonus': attack,
+            'dice_string': dice,
+            'damage_mod': damage_mod,
+            'damage_type': damage_type 
+        }
+
+# сбор значений из словаря для защиты
+def prepare_defender_profile(defender):
+        ac = defender['armor_class']
+        resistances = defender['resistances']
+        vulnerability = defender['vulnerability']
+        return {
+            'armor_class': ac,
+            'resistances': resistances,
+            'vulnerability': vulnerability
+        }
+
+# удар игрока/монстра
+def punch(attacker, defender):
+    attack_bonus, dice_string, damage_mod, damage_type = prepare_attack_profile(attacker)
+    armor_class, resistances, vulnerability = prepare_defender_profile(defender)
+    if hit_chance(attack_bonus) >= armor_class:
+        hit_damage = damage(dice_string)[0] + damage_mod
+        if damage_type in resistances:
+            hit_damage /= 2
+            return (hit_damage, f'Было нанесено {hit_damage}')
+        
+        elif damage_type in vulnerability:
+            hit_damage *= 2
+            return (hit_damage, f'Было нанесено {hit_damage}')
+        
+        else:
+            return (hit_damage, f'Было нанесено {hit_damage}')
+    else:
+        return (0, 'Ты промахнулся')
+
+def get_enemy(enemy):
+   enemy_chel_rat = enemy['challenge_rating']
+   if enemy_chel_rat in cr_templates:
+       cr_enemy = cr_templates[enemy_chel_rat]
+       max_hp = cr_enemy['max_hp']
+       proficiency_bonus = cr_enemy['proficiency_bonus']
+       dice_string = cr_enemy['attack']['dice_string']
+       strength = cr_enemy['base_stat']['strength']
+       dexterity = cr_enemy['base_stat']['dexterity']
+       constitution = cr_enemy['base_stat']['constitution']
+       intelligence = cr_enemy['base_stat']['intelligence']
+       wisdom = cr_enemy['base_stat']['wisdom']
+       charisma = cr_enemy['base_stat']['charisma']
+              
+       enemy['proficiency_bonus'] = proficiency_bonus  
+
+       enemy['base_stat']['strength'] = strength
+       enemy['base_stat']['dexterity'] = dexterity
+       enemy['base_stat']['constitution'] = constitution
+       enemy['base_stat']['intelligence'] = intelligence
+       enemy['base_stat']['wisdom'] = wisdom
+       enemy['base_stat']['charisma'] = charisma
+
+       enemy['stat_mod']['strength'] = dex_mod(strength)[0]
+       enemy['stat_mod']['dexterity'] = dex_mod(dexterity)[0]
+       enemy['stat_mod']['constitution'] = dex_mod(constitution)[0]
+       enemy['stat_mod']['intelligence'] = dex_mod(intelligence)[0]
+       enemy['stat_mod']['charisma'] = dex_mod(charisma)[0]
+       
+       enemy['max_hp'], enemy['hp'] = max_hp_chance(max_hp, enemy['max_hp'], enemy['stat_mod']['constitution'])
+       enemy['armor_class'] = armor_class(enemy['stat_mod']['dexterity'], enemy['armor'], enemy['bonus_shield'])[0]
+       enemy['attack']['dice_string'] = dice_string            
+       return enemy
+
 
 
 # функция получения нового оружия игроком(справочник_оружия, будущее_оружие):
@@ -196,12 +266,16 @@ def choice_playeer(enemy, choice, playeer_base, enemy_base):
         state_active = True
         return (player_state, enemy['hp'], 'Вы выбрали уклониться', state_active)
 
+def game_core2():
+
+
+
 def game_core():
     playeer_base = playeer['base_stat']   
     while playeer['hp'] > 0:
         loc = world[playeer['location']]
         print(f'{loc["descriptions"]}')
-        print(f'Твое здоровье: {playeer["hp"]}, максимальное здоровье: {playeer["max-hp"]}')
+        print(f'Твое здоровье: {playeer["hp"]}, максимальное здоровье: {playeer["max_hp"]}')
         print('Ты можешь пойти на', ' или '.join(loc['exit'].keys()))
         
         while True:

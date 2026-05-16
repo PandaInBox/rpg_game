@@ -11,3 +11,9 @@ armor_light = {
 armor_medium = {}
 armor_heavy = {}
 shield = {}
+armor_templates = {
+    "narutal_armor":{
+        'base_armor': 12,
+        'max_dex_mod': 99
+    }
+}

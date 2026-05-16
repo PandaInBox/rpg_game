@@ -1,7 +1,7 @@
+from armor.armor import armor_templates
 cr_templates = {
-    {
-  "0": {
-    "max-hp": "1d8",
+  0: {
+    "max_hp": "1d8",
     "challenge_rating": 0,
     "proficiency_bonus": 2,
     "armor_class": 13,
@@ -17,8 +17,8 @@ cr_templates = {
       "charisma": 8
     }
   },
-  "1/8": {
-    "max-hp": "2d8",
+  0.125: {
+    "max_hp": "2d8",
     "challenge_rating": 0.125,
     "proficiency_bonus": 2,
     "armor_class": 13,
@@ -34,8 +34,8 @@ cr_templates = {
       "charisma": 8
     }
   },
-  "1/4": {
-    "max-hp": "2d6",
+  0.25: {
+    "max_hp": "2d6",
     "challenge_rating": 0.25,
     "proficiency_bonus": 2,
     "armor_class": 13,
@@ -51,8 +51,8 @@ cr_templates = {
       "charisma": 8
     }
   },
-  "1/2": {
-    "max-hp": "2d8",
+  0.5: {
+    "max_hp": "2d8",
     "challenge_rating": 0.5,
     "proficiency_bonus": 2,
     "armor_class": 13,
@@ -68,8 +68,8 @@ cr_templates = {
       "charisma": 9
     }
   },
-  "1": {
-    "max-hp": "5d8",
+  1: {
+    "max_hp": "5d8",
     "challenge_rating": 1,
     "proficiency_bonus": 2,
     "armor_class": 13,
@@ -85,8 +85,8 @@ cr_templates = {
       "charisma": 9
     }
   },
-  "2": {
-    "max-hp": "7d10",
+  2: {
+    "max_hp": "7d10",
     "challenge_rating": 2,
     "proficiency_bonus": 2,
     "armor_class": 13,
@@ -102,8 +102,8 @@ cr_templates = {
       "charisma": 7
     }
   },
-  "3": {
-    "max-hp": "9d8",
+  3: {
+    "max_hp": "9d8",
     "challenge_rating": 3,
     "proficiency_bonus": 2,
     "armor_class": 13,
@@ -119,8 +119,8 @@ cr_templates = {
       "charisma": 10
     }
   },
-  "4": {
-    "max-hp": "10d10",
+  4: {
+    "max_hp": "10d10",
     "challenge_rating": 4,
     "proficiency_bonus": 2,
     "armor_class": 14,
@@ -136,8 +136,8 @@ cr_templates = {
       "charisma": 8
     }
   },
-  "5": {
-    "max-hp": "8d10",
+  5: {
+    "max_hp": "8d10",
     "challenge_rating": 5,
     "proficiency_bonus": 3,
     "armor_class": 15,
@@ -153,8 +153,8 @@ cr_templates = {
       "charisma": 7
     }
   },
-  "6": {
-    "max-hp": "12d10",
+  6: {
+    "max_hp": "12d10",
     "challenge_rating": 6,
     "proficiency_bonus": 3,
     "armor_class": 15,
@@ -170,8 +170,8 @@ cr_templates = {
       "charisma": 10
     }
   },
-  "7": {
-    "max-hp": "13d8",
+  7: {
+    "max_hp": "13d8",
     "challenge_rating": 7,
     "proficiency_bonus": 3,
     "armor_class": 15,
@@ -187,8 +187,8 @@ cr_templates = {
       "charisma": 15
     }
   },
-  "8": {
-    "max-hp": "12d12",
+  8: {
+    "max_hp": "12d12",
     "challenge_rating": 8,
     "proficiency_bonus": 3,
     "armor_class": 16,
@@ -204,8 +204,8 @@ cr_templates = {
       "charisma": 12
     }
   },
-  "9": {
-    "max-hp": "13d12",
+  9: {
+    "max_hp": "13d12",
     "challenge_rating": 9,
     "proficiency_bonus": 4,
     "armor_class": 16,
@@ -221,8 +221,8 @@ cr_templates = {
       "charisma": 13
     }
   },
-  "10": {
-    "max-hp": "17d10",
+  10: {
+    "max_hp": "17d10",
     "challenge_rating": 10,
     "proficiency_bonus": 4,
     "armor_class": 17,
@@ -239,12 +239,11 @@ cr_templates = {
     }
   }
 }
-}
 monsters = {
     'wolf':{
         'name': 'wolf',
         'hp': None,
-        'max-hp': None,
+        'max_hp': None,
         'challenge_rating': 0,
         'location': 'лес',
         'proficiency_bonus': 0, #бонус мастерства
@@ -252,6 +251,8 @@ monsters = {
         'vulnerability':[],  #бонус уязвимость
         'armor_class': None,
         'type_armor': 'natural armor',
+        'armor': armor_templates['narutal_armor'],
+        'bonus_shield':0,
         'attack': {                         # аналог оружия
             'dice_string': None,    
             'type_damage': 'piercing',
